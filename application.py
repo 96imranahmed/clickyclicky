@@ -4,7 +4,7 @@ from __future__ import print_function
 from websocket_server import WebsocketServer
 
 PORT = 9000
-server = WebsocketServer(PORT, '127.0.0.1')
+server = WebsocketServer(PORT, '0.0.0.0')
 
 cur_clients = {}
 client_dims = {}
@@ -46,6 +46,8 @@ def message_received(client, server, message):
         machine_id = msg_lst[0]
 
         client_dims[machine_id] = [int(i) for i in msg_lst[2].split(',')]
+
+        server.send_message(client, "k")
 
     elif message_type == 'u':
     	msg_lst = msg.split(':')

@@ -4,28 +4,28 @@ from websocket import create_connection
 from pymouse import PyMouse
 import time
 
-def send_message_async(ws, message):
+def send_non_blocking(ws, message):
     # happy go lucky, "at most once" message sending
     ws.send(message)
 
-def send_message_sync(ws, message, id_in):
+def send_blocking(ws, message):
     # Send the message and hope for a return
     ws.send(message)
-    try:
-        return ws.recv()
-    except:
-        # swallow it
-        pass
+    dead = True
+    while dead:
+        try:
+            tmp = ws.recv()
+            print("not swallowing")
+            print(tmp)
+            dead = False
+        except:
+            pass
 
 def create_socket(connect_message):
-    # ws = create_connection("ws://35.178.5.103:9000")
-    ws = create_connection("ws://127.0.0.1:9000")
+    ws = create_connection("ws://35.178.5.103:9000")
+    # ws = create_connection("ws://127.0.0.1:9000")
     ws.settimeout(0.05)
-    ws.send(connect_message)
-    try:
-        _ = ws.recv()
-    except:
-        pass
+    send_blocking(ws, connect_message)
     return ws
 
 
@@ -37,8 +37,9 @@ def master():
     ws = create_socket('s0:0:%d,%d' % (xdim, ydim))
 
     while True:
+        print("INPUT TIME")
         a = input()
-        ws.send(a)
+        send_non_blocking(ws,a)
 
 if __name__ == '__main__':
     master()
