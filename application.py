@@ -8,6 +8,7 @@ PORT = 9000
 server = WebsocketServer(PORT, '0.0.0.0')
 
 cur_clients = {}
+client_dims = {}
 
 active_screen_id = 0
 
@@ -18,7 +19,7 @@ def start_server():
     server.run_forever()
 
 def message_received(client, server, message):
-    global cur_clients, active_screen_id
+    global cur_clients, client_dims, active_screen_id
 
     if len(message) == 0: return
 
@@ -42,6 +43,10 @@ def message_received(client, server, message):
         	slave_id = msg_lst[0]
         	print("Got slave connected")
         	cur_clients['slave_%d' % (slave_id,)] = client
+
+        machine_id = msg_lst[0]
+
+        client_dims[machine_id] = [int(i) for i in msg_lst[2].split(',')]
 
     elif message_type == 'u':
     	msg_lst = msg.split(':')
