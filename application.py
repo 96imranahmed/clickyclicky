@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-import sys
-print = lambda x: sys.stdout.write("%s\n" % x)
+
 from websocket_server import WebsocketServer
 
 PORT = 9000
-server = WebsocketServer(PORT, '0.0.0.0')
+server = WebsocketServer(PORT, '127.0.0.1')
 
 cur_clients = {}
 client_dims = {}
@@ -32,7 +31,7 @@ def message_received(client, server, message):
         print('Debug: ', msg)
 
     elif message_type == 's':
-        #This is a setup message - (s{id}:{master,slave})
+        #This is a setup message - (s{id}:{master,slave}:{x,y})
         msg_lst = msg.split(':')
 
         if msg_lst[1] == '0':
@@ -63,13 +62,13 @@ def message_received(client, server, message):
     	coords = [int(i) for i in msg.split(',')]
 
     	# TODO TALK TO THE ACTIVE CLIENT with these coords
-    	print("new coords for active client (%d, %d)" % (x,y))
+    	print("new coords for active client (%d, %d)" % (coords[0],coords[1]))
 
-    elif message_type == 's':
+    elif message_type == 'l':
     	direction = int(msg)
 
     	# TODO TALK TO THE ACTIVE CLIENT with these coords
-    	print("new coords for active client (%d, %d)" % (x,y))
+    	print("scroll boi for active client (%d)" % (direction))
 
     elif message_type == 'i':
     	msg_lst = msg.split(':')
@@ -85,11 +84,11 @@ def message_received(client, server, message):
 
 def client_left(client, server):
     global cur_clients
-    if client in cur_clients:
-    	print("this is bad. client dead. ABORT ABORT.")
-    	del cur_clients[client]
-    else:
-    	print("THIS IS ALSO BAD. non existent client. ABORT ABORT. It's a trap")
+    for k,v in cur_clients.items():
+    	if v == client:
+    		del cur_clients[k]
+    		print("this is bad. client dead. ABORT ABORT.")
+    		return
 
 
 def new_client(client, server):
