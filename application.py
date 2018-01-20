@@ -6,10 +6,21 @@ from websocket_server import WebsocketServer
 PORT = 9000
 server = WebsocketServer(PORT, '0.0.0.0')
 
-cur_clients = {}
-client_dims = {}
+class Client(object):
+	def __init__(self, client_obj, client_type, client_active, client_id, dims, bdry=None):
+		self.obj = client_obj
+		self.client_type = client_type
+		self.client_active = client_active
+		self.id = client_id
+		self.dim_x = dims[0]
+		self.dim_y = dims[1]
+		self.bdry = bdry 
 
-active_screen_id = 0
+
+# keyed by ids
+cur_clients = {}
+
+active_client_id = 0
 
 def start_server():
     server.set_fn_new_client(new_client)
@@ -18,7 +29,7 @@ def start_server():
     server.run_forever()
 
 def message_received(client, server, message):
-    global cur_clients, client_dims, active_screen_id
+    global cur_clients, active_client_id
 
     if len(message) == 0: return
 
@@ -36,59 +47,64 @@ def message_received(client, server, message):
 
         if msg_lst[1] == '0':
             print("Got master connected")
-            cur_clients['master'] = client
+            dims = [int(i) for i in msg_lst[2].split(',')]
+            c_cur = Client(client, 'master', True, int(msg_lst[0]), dims)
 
-        elif msg_lst[1] == "1":
-        	slave_id = msg_lst[0]
+        else:
         	print("Got slave connected")
-        	cur_clients['slave_%d' % (slave_id,)] = client
+            dims = [int(i) for i in msg_lst[2].split(',')]
+            c_cur = Client(client, 'slave', False, int(msg_lst[0]), dims)
 
-        machine_id = msg_lst[0]
-
-        client_dims[machine_id] = [int(i) for i in msg_lst[2].split(',')]
+        cur_clients[int(msg_lst[0])] = c_cur
 
         server.send_message(client, "k")
 
     elif message_type == 'u':
     	msg_lst = msg.split(':')
-    	# firstly get the new active screen
-    	active_screen_id = int(msg_lst[0])
-
-    	new_y = msg_lst[1]
-
-    	# TODO Talk to the other client with this info
-    	print("CONTEXT SWITCH TO %d" % active_screen_id)
+    	# Firstly get the new active screen
+    	cur_clients[active_client_id].client_active = False
+    	active_client_id = int(msg_lst[0])
+    	cur_clients[active_client_id].client_active = True
+		# Client knows its active the moment it gets a message
+		# TODO: Send message to client
+    	server.send_message(cur_clients[active_client_id].obj, 'c' + msg)
+    	print("CONTEXT SWITCH TO %d" % active_client_id)
 
 
     elif message_type == 'm':
-    	coords = [int(i) for i in msg.split(',')]
-
+    	server.send_message(cur_clients[active_client_id].obj, 'c' + msg)  	
     	# TODO TALK TO THE ACTIVE CLIENT with these coords
     	print("new coords for active client (%d, %d)" % (coords[0],coords[1]))
 
     elif message_type == 'l':
-    	direction = int(msg)
-
+		server.send_message(cur_clients[active_client_id].obj, message_type + msg)  	
     	# TODO TALK TO THE ACTIVE CLIENT with these coords
     	print("scroll boi for active client (%d)" % (direction))
 
     elif message_type == 'i':
-    	msg_lst = msg.split(':')
     	action_type = int(msg_lst[0])
     	if action_type == 0:
-    		# this is a key
+    		# Most likely going to be a queue of keys (should be able to handle multiple)
+    		server.send_message(cur_clients[active_client_id].obj, 'k' + msg)  
     		print("SENDING KEY AND WHAT KEY")
     		# TODO Send to client
     	elif action_type == 1:
     		# this is a mouse action
+        	server.send_message(cur_clients[active_client_id].obj, 'a' + msg)  
     		print("SENDING mouse click/release")
     		# TODO
 
+def send_state_to_clients():
+	pass
+
 def client_left(client, server):
-    global cur_clients
+    global cur_clients, active_client_id
     for k,v in cur_clients.items():
-    	if v == client:
+    	if v.client_obj == client:
     		del cur_clients[k]
+    		if active_client_id == k:
+    			active_client_id = 0
+    			# This function should simply be the reply at every poll request: send_state_to_clients()	
     		print("this is bad. client dead. ABORT ABORT.")
     		return
 

@@ -6,7 +6,7 @@ import time
 controller = Controller()
 
 while True:
-    x,y = controller.position
+    x, y = controller.position
     if x > 1000:
         controller.position = (500,y)
 
