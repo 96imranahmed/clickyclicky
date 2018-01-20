@@ -4,34 +4,18 @@ from websocket import create_connection
 from pymouse import PyMouse
 import time
 
+def send_message_async(ws, message):
+    # happy go lucky, "at most once" message sending
+    ws.send(message)
 
 def send_message_sync(ws, message, id_in):
+    # Send the message and hope for a return
     ws.send(message)
-    result = None
-    count = 0
-    while result is None:
-        try:
-            ws.send('r'+id_in)
-            result =  ws.recv()
-            if result == 'k':
-                result = None
-        except:
-            count+=1
-    receipt = None
-    while receipt is None:
-        try:
-            ws.send('k'+id_in)
-            receipt =  ws.recv()
-        except:
-            pass
-    return result
-
-def all_synced():
-    global agents
-    for item in agents:
-        if item == 0:
-            return False
-    return True
+    try:
+        return ws.recv()
+    except:
+        # swallow it
+        pass
 
 def create_socket(connect_message):
     # ws = create_connection("ws://35.178.5.103:9000")
@@ -53,7 +37,6 @@ def master():
     ws = create_socket('s0:0:%d,%d' % (xdim, ydim))
 
     while True:
-        print("Enter value")
         a = input()
         ws.send(a)
 
