@@ -20,7 +20,10 @@ BUTTON_LIST = [Button.left, Button.middle, Button.right]
 
 
 PORT = 9002
-copyserver = WebsocketServer(PORT, '0.0.0.0')
+if SLAVE_ID == 1:
+    copyserver = WebsocketServer(PORT, '172.20.1.67')
+else:
+    copyserver = WebsocketServer(PORT, '172.20.3.211')
 copyserver_remote_object = None
 
 def client_left(client, copyserver):

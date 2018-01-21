@@ -64,7 +64,7 @@ CLICK_BUTTONS = {
 
 
 PORT = 9001
-copyserver = WebsocketServer(PORT, '0.0.0.0')
+copyserver = WebsocketServer(PORT, '172.20.3.192')
 copyserver_remote_object = None
 
 

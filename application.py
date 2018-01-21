@@ -37,6 +37,7 @@ def start_server():
 
 def create_copyserver_socket(connect_message, address):
     # ws = create_connection("ws://35.178.5.103:9000")
+    print("got to create copyserver socket")
     ws = create_connection("ws://" + address)
 
     ws.settimeout(0.05)
@@ -112,11 +113,11 @@ def message_received(client, server, message):
         copyserver_id = int(msg[0])
         # now initiate a connection with the client's copyserver
         if copyserver_id == 0:
-            client_copyserver_addr = "0.0.0.0:9001"
+            client_copyserver_addr = "172.20.3.192:9001"
         elif copyserver_id == 1:
-            client_copyserver_addr = "0.0.0.0:9002"
+            client_copyserver_addr = "172.20.1.67:9002"
         elif copyserver_id == 2:
-            client_copyserver_addr = "0.0.0.0:9003"
+            client_copyserver_addr = "172.20.3.211:9003"
 
         connect_message = "hello"
 
