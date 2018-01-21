@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
+from websocket_server import WebsocketServer
 
 PORT = 9000
 server = WebsocketServer(PORT, '0.0.0.0')
@@ -24,6 +25,11 @@ cur_clients = {}
 
 active_client_id = 0
 
+def start_server():
+    server.set_fn_new_client(new_client)
+    server.set_fn_client_left(client_left)
+    server.set_fn_message_received(message_received)
+    server.run_forever()
 
 
 def message_received(client, server, message):
