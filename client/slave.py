@@ -4,6 +4,11 @@ from websocket import create_connection
 from pymouse import PyMouse
 import time
 
+ws = None
+m_con = mouse.Controller()
+k_con = keyboard.Controller()
+
+
 def send_non_blocking(ws, message):
     # happy go lucky, "at most once" message sending
     ws.send(message)
@@ -29,8 +34,8 @@ def create_socket(connect_message):
     return ws
 
 
-
 def slave():
+    global ws
     # GET SCREEN DIM
     m = PyMouse()
     xdim, ydim = m.screen_size()
