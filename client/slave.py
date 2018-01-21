@@ -42,6 +42,7 @@ def process_message(msg):
         cmd_split = msg.split(":")
         ch = cmd_split[0]
         is_press = bool(int(cmd_split[1]))
+        print(is_press)
         if is_press:
             print(ch)
             k_con.press(ch)
