@@ -82,13 +82,13 @@ def preprocess_keys(msg, data):
         else:
             tup = (msg, data.vkCode)
         key_send = LST._event_to_key(tup[0], tup[1])
+        print(type(key_send), str(key_send))
         if msg == 256:
             pressed = 1
         elif msg == 257:
             pressed = 0
-        if isinstance(key_send, str):
-            monosodium_glutamate = "i%s:%d" % (key_send, pressed)
-            print(monosodium_glutamate)
+        if not isinstance(key_send, int):
+            monosodium_glutamate = "i%s:%d" % (str(key_send), pressed)
         else:
             monosodium_glutamate = "k%s:%d" % (str(key_send), pressed)
         send_non_blocking(ws, monosodium_glutamate)
