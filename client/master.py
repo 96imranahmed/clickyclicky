@@ -19,6 +19,11 @@ from pynput._util.win32 import (
     SendInput,
     SystemHook)
 
+import pynput.keyboard._win32 as w32
+
+LST = w32.Listener(None, None)
+
+kl = None
 l = None
 ws = None
 
@@ -51,6 +56,30 @@ CLICK_BUTTONS = {
     WM_MBUTTONUP: (1, False),
     WM_RBUTTONDOWN: (2, True),
     WM_RBUTTONUP: (2, False)}
+
+
+
+
+def on_press(key):
+    pass
+
+def on_release(key):
+    pass
+
+
+def preprocess_keys(msg, data):
+    global kl, LST, ws
+    if deadmau5:
+        is_packet = data.vkCode == LST._VK_PACKET
+        if is_packet:
+            tup = (msg | LST._UTF16_FLAG, data.scanCode)
+        else:
+            tup = (msg, data.vkCode)
+        key_send = LST._event_to_key(tup[0], tup[1])
+        # TODO add sending logic
+        kl.suppress_event()
+    return True
+
 
 def on_move(x, y):
     # print('Pointer moved to {0}'.format(
@@ -119,6 +148,7 @@ def send_blocking(ws, message):
 def create_socket(connect_message):
     ws = create_connection("ws://35.178.5.103:9000")
     #ws = create_connection("ws://127.0.0.1:9000")
+
     ws.settimeout(0.05)
     send_blocking(ws, connect_message)
     return ws
@@ -188,14 +218,28 @@ def master():
 
 if __name__ == '__main__':
 
+    kl = keyboard.Listener(
+        on_press=on_press,
+        on_release=on_release,
+        win32_event_filter = preprocess_keys
+        )
+
     l = mouse.Listener(
         on_move=on_move,
         on_click=on_click,
         on_scroll=on_scroll,
         win32_event_filter = block_maus_callback)
 
+
     l.start()
+
     print("oh boi")
+
+    kl.start()
+
     print("WHOAH boi")
+
     master()
+
     l.join()
+    kl.join()
