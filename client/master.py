@@ -108,7 +108,7 @@ def block_maus_callback(msg, data):
 
         if msg in CLICK_BUTTONS:
             button, pressed = CLICK_BUTTONS[msg]
-            monosodium_glutamate = "c%d:%d:%d,%d" % (button, pressed, x_pos, y_pos)
+            monosodium_glutamate = "c%d:%d:%d,%d" % (button, int(pressed), x_pos, y_pos)
             send_non_blocking(ws, monosodium_glutamate)
             l.suppress_event()
             
@@ -118,7 +118,7 @@ def block_maus_callback(msg, data):
             dx = dd * mx
             dy = dd * my
 
-            monosodium_glutamate = "l%d,%d" % (dx, dy)
+            monosodium_glutamate = "l%d:%d" % (dx, dy)
             send_non_blocking(ws, monosodium_glutamate)
             l.suppress_event()
 
