@@ -49,6 +49,37 @@ def start_copyserver():
 
 rosetta = {}
 
+PORT = 9002
+copyserver = WebsocketServer(PORT, '0.0.0.0')
+copyserver_remote_object = None
+
+def client_left(client, copyserver):
+    pass
+
+def new_client(client, copyserver):
+    pass
+
+def proc_copyserver_msg(client, copyserver, msg):
+    global copyserver_remote_object
+
+    if len(msg) == 0: 
+        return
+
+    if msg == 'hello':
+        copyserver_remote_object = client
+        copyserver.send_message(client, "k")
+
+    elif msg.split(':')[0] == 'pyperclip':
+        pyperclip.copy(msg.split(':')[1])
+
+
+def start_copyserver():
+    copyserver.set_fn_new_client(new_client)
+    copyserver.set_fn_client_left(client_left)
+    copyserver.set_fn_message_received(proc_copyserver_msg)
+    copyserver.run_forever()
+
+
 def process_message(msg):
     global m_con, k_con, rosetta
     msg_type = msg[0]
