@@ -33,7 +33,7 @@ def start_server():
 
 
 def message_received(client, server, message):
-    global cur_clients, active_client_id, clipboard, clipboard_change
+    global cur_clients, active_client_id, clipboard
 
     if len(message) == 0: return
 
@@ -66,6 +66,7 @@ def message_received(client, server, message):
 
 
     elif message_type == 'u':
+        print(clipboard)
         msg_lst = msg.split(':')
         # Firstly get the new active screen
         if active_client_id in cur_clients:
@@ -92,6 +93,7 @@ def message_received(client, server, message):
 
 
     elif message_type == "v":
+        print(msg)
         if msg == "":
             server.send_message(cur_clients[0].obj, "n" + clipboard)
         else:
