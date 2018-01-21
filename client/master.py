@@ -88,6 +88,7 @@ def preprocess_keys(msg, data):
             pressed = 0
         if isinstance(key_send, str):
             monosodium_glutamate = "i%s:%d" % (key_send, pressed)
+            print(monosodium_glutamate)
         else:
             monosodium_glutamate = "k%s:%d" % (str(key_send), pressed)
         send_non_blocking(ws, monosodium_glutamate)
