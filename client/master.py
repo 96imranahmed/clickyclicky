@@ -190,8 +190,8 @@ def start_copyserver():
 
 
 def create_socket(connect_message):
-    # ws = create_connection("ws://35.178.5.103:9000")
-    ws = create_connection("ws://127.0.0.1:9000")
+    ws = create_connection("ws://35.178.5.103:9000")
+    # ws = create_connection("ws://127.0.0.1:9000")
 
     ws.settimeout(0.05)
     send_blocking(ws, connect_message)
