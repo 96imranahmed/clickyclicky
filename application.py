@@ -54,7 +54,6 @@ def message_received(client, server, message):
             dims = [int(i) for i in msg_lst[2].split(',')]
             c_cur = Client(client, 'master', True, int(msg_lst[0]), dims)
 
-
         else:
             print("Got slave connected")
             dims = [int(i) for i in msg_lst[2].split(',')]
@@ -77,8 +76,6 @@ def message_received(client, server, message):
             if not active_client_id == 0:
                 server.send_message(cur_clients[active_client_id].obj, 'm' + msg)
 
-
-
         print("CONTEXT SWITCH TO %d" % active_client_id)
 
         # send message to master
@@ -93,17 +90,11 @@ def message_received(client, server, message):
 
     elif message_type == "v":
         if clipboard != msg:
-            clipboard_change = True
             clipboard = msg
-        if clipboard_change:
-            for client_id in cur_clients:
-                if client_id == 0: pass
-                server.send_message(cur_clients[client_id].obj, "n")
-        clipboard_change = False
 
     elif message_type == 'z':
         if active_client_id in cur_clients:
-            server.send_message(cur_clients[active_client_id].obj, clipboard)
+            server.send_message(cur_clients[active_client_id].obj, "!" + clipboard)
 
 
 

@@ -1,5 +1,6 @@
 from __future__ import division
 from __future__ import print_function
+import websocket
 from websocket import create_connection
 from pynput import mouse, keyboard
 from pynput.mouse import Button, Controller
@@ -57,9 +58,7 @@ def process_message(msg):
             k_con.press(ch)
         else:
             k_con.release(ch)  
-    elif msg_type == "n":
-        # received a clipboard update
-        recv_clipboard(ws)   
+  
 
 def send_non_blocking(ws, message):
     # happy go lucky, "at most once" message sending
@@ -89,10 +88,12 @@ def recv_clipboard(ws):
     while dead:
         try:
             tmp = ws.recv()
-            dead = False
-        except:
+            if tmp[0] == "!":
+                dead = False
+            else: process_message(tmp)
+        except websocket._exceptions.WebSocketTimeoutException as e:
             pass
-    pyperclip.copy(tmp)
+    pyperclip.copy(tmp[1:])
 
 
 def slave():
@@ -111,18 +112,22 @@ def slave():
         while no_msg:
             try:
                 current_msg = ws.recv()
+                process_message(current_msg)
                 no_msg = False
                 if time.time() - prev_time > 1: 
+                    recv_clipboard(ws)
                     # first, do clipboard ops
                     new_clip = pyperclip.paste()
                     if new_clip != cur_clip:
                         cur_clip = new_clip
                         clipmsg = "v" + cur_clip
+                        print(clipmsg)
                         send_non_blocking(ws, clipmsg)
                     prev_time = time.time()
-                process_message(current_msg)
-            except:
+
+            except websocket._exceptions.WebSocketTimeoutException as e:
                 pass
+                
     
 
 if __name__ == '__main__':
