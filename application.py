@@ -7,14 +7,14 @@ PORT = 9000
 server = WebsocketServer(PORT, '0.0.0.0')
 
 class Client(object):
-	def __init__(self, client_obj, client_type, client_active, client_id, dims, bdry=None):
-		self.obj = client_obj
-		self.client_type = client_type
-		self.client_active = client_active
-		self.id = client_id
-		self.dim_x = dims[0]
-		self.dim_y = dims[1]
-		self.bdry = bdry 
+    def __init__(self, client_obj, client_type, client_active, client_id, dims, bdry=None):
+        self.obj = client_obj
+        self.client_type = client_type
+        self.client_active = client_active
+        self.id = client_id
+        self.dim_x = dims[0]
+        self.dim_y = dims[1]
+        self.bdry = bdry 
 
 
 # keyed by ids
@@ -51,7 +51,7 @@ def message_received(client, server, message):
             c_cur = Client(client, 'master', True, int(msg_lst[0]), dims)
 
         else:
-        	print("Got slave connected")
+            print("Got slave connected")
             dims = [int(i) for i in msg_lst[2].split(',')]
             c_cur = Client(client, 'slave', False, int(msg_lst[0]), dims)
 
@@ -60,53 +60,58 @@ def message_received(client, server, message):
         server.send_message(client, "k")
 
     elif message_type == 'u':
-    	msg_lst = msg.split(':')
-    	# Firstly get the new active screen
-    	cur_clients[active_client_id].client_active = False
-    	active_client_id = int(msg_lst[0])
-    	cur_clients[active_client_id].client_active = True
-		# Client knows its active the moment it gets a message
-		# TODO: Send message to client
-    	server.send_message(cur_clients[active_client_id].obj, 'c' + msg)
-    	print("CONTEXT SWITCH TO %d" % active_client_id)
+        msg_lst = msg.split(':')
+        # Firstly get the new active screen
+        if active_client_id in cur_clients:
+            cur_clients[active_client_id].client_active = False
+        active_client_id = int(msg_lst[0])
+
+        if active_client_id in cur_clients:
+            cur_clients[active_client_id].client_active = True
+            if not active_client_id == 0:
+                server.send_message(cur_clients[active_client_id].obj, 'm' + msg)
+        print("CONTEXT SWITCH TO %d" % active_client_id)
+
+        # send message to master
+        server.send_message(cur_clients[0].obj, '<3')
 
 
     elif message_type == 'm':
-    	server.send_message(cur_clients[active_client_id].obj, 'c' + msg)  	
-    	# TODO TALK TO THE ACTIVE CLIENT with these coords
-    	print("new coords for active client (%d, %d)" % (coords[0],coords[1]))
+        if active_client_id in cur_clients:
+            server.send_message(cur_clients[active_client_id].obj, message_type + msg)
+        coords = [int(i) for i in msg.split(',')]   
+        print("new coords for active client (%d, %d)" % (coords[0], coords[1]))
 
     elif message_type == 'l':
-		server.send_message(cur_clients[active_client_id].obj, message_type + msg)  	
-    	# TODO TALK TO THE ACTIVE CLIENT with these coords
-    	print("scroll boi for active client (%d)" % (direction))
+        if active_client_id in cur_clients:
+            server.send_message(cur_clients[active_client_id].obj, message_type + msg)
+        dxdy = [int(i) for i in msg.split(',')]        
+        print("scroll boi for active client (%d, %d)" % (dxdy[0], dxdy[1]))
+
+    elif message_type == 'c':
+        if active_client_id in cur_clients:
+            server.send_message(cur_clients[active_client_id].obj, message_type + msg)
+        print("SENDING KEY AND WHAT KEY")
 
     elif message_type == 'i':
-    	action_type = int(msg_lst[0])
-    	if action_type == 0:
-    		# Most likely going to be a queue of keys (should be able to handle multiple)
-    		server.send_message(cur_clients[active_client_id].obj, 'k' + msg)  
-    		print("SENDING KEY AND WHAT KEY")
-    		# TODO Send to client
-    	elif action_type == 1:
-    		# this is a mouse action
-        	server.send_message(cur_clients[active_client_id].obj, 'a' + msg)  
-    		print("SENDING mouse click/release")
-    		# TODO
+        # Most likely going to be a queue of keys (should be able to handle multiple)
+        if active_client_id in cur_clients:
+            server.send_message(cur_clients[active_client_id].obj, message_type + msg)  
+        print("SENDING KEY AND WHAT KEY")
 
 def send_state_to_clients():
-	pass
+    pass
 
 def client_left(client, server):
     global cur_clients, active_client_id
     for k,v in cur_clients.items():
-    	if v.client_obj == client:
-    		del cur_clients[k]
-    		if active_client_id == k:
-    			active_client_id = 0
-    			# This function should simply be the reply at every poll request: send_state_to_clients()	
-    		print("this is bad. client dead. ABORT ABORT.")
-    		return
+        if v.client_obj == client:
+            del cur_clients[k]
+            if active_client_id == k:
+                active_client_id = 0
+                # This function should simply be the reply at every poll request: send_state_to_clients()   
+            print("this is bad. client dead. ABORT ABORT.")
+            return
 
 
 def new_client(client, server):
