@@ -1,7 +1,6 @@
 from __future__ import division
 from __future__ import print_function
 from websocket import create_connection
-from pymouse import PyMouse
 import time
 
 import ctypes
@@ -118,8 +117,8 @@ def send_blocking(ws, message):
             pass
 
 def create_socket(connect_message):
-    # ws = create_connection("ws://35.178.5.103:9000")
-    ws = create_connection("ws://127.0.0.1:9000")
+    ws = create_connection("ws://35.178.5.103:9000")
+    #ws = create_connection("ws://127.0.0.1:9000")
     ws.settimeout(0.05)
     send_blocking(ws, connect_message)
     return ws
@@ -146,8 +145,8 @@ def master():
     global ws, deadmau5
     deadmau5 = False
     # GET SCREEN DIM
-    m = PyMouse()
-    xdim, ydim = m.screen_size()
+    user32 = ctypes.windll.user32
+    xdim, ydim = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)
     ws = create_socket('s0:0:%d,%d' % (xdim, ydim))
 
     while True:

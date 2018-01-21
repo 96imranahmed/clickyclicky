@@ -1,7 +1,6 @@
 from __future__ import division
 from __future__ import print_function
 from websocket import create_connection
-from pymouse import PyMouse
 from pynput import mouse, keyboard
 from pynput.mouse import Button, Controller
 import time
@@ -64,8 +63,8 @@ def create_socket(connect_message):
 def slave():
     global ws
     # GET SCREEN DIM
-    m = PyMouse()
-    xdim, ydim = m.screen_size()
+    user32 = ctypes.windll.user32
+    xdim, ydim = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)
     ws = create_socket('s1:1:%d,%d' % (xdim, ydim))
 
     while True:
