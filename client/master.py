@@ -89,20 +89,29 @@ def block_maus_callback(msg, data):
         if msg in CLICK_BUTTONS:
             button, pressed = CLICK_BUTTONS[msg]
             flag = not pressed
-            monosodium_glutamate = "i1:"
+            monosodium_glutamate = "i1:" + str(pressed)
+            send_non_blocking(ws, monosodium_glutamate)
             l.suppress_event()
             
-
         elif msg in SCROLL_BUTTONS:
-
             dd = wintypes.SHORT(data.mouseData >> 16).value // _WHEEL_DELTA
             mx, my = SCROLL_BUTTONS[msg]
             dx = dd * mx
             dy = dd * my
 
+            # TODO ADJUST PROTOCOL TO SEND DX as well
+            if dy > 0: 
+                up = True
+            else:
+                up = False
+
+            monosodium_glutamate = "l1:" + str(not up)
+            send_non_blocking(ws, monosodium_glutamate)
             l.suppress_event()
 
         elif msg == WM_MOUSEMOVE:
+            monosodium_glutamate = "m:%d,%d" % (x_pos, y_pos)
+            send_non_blocking(ws, monosodium_glutamate)
             # master is dead; 1 < 2
     return True
 
@@ -112,7 +121,6 @@ l = mouse.Listener(
         on_click=on_click,
         on_scroll=on_scroll,
         win32_event_filter = block_maus_callback)
-
 
 
 def send_non_blocking(ws, message):
