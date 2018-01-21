@@ -104,7 +104,7 @@ def slave():
     ws = create_socket('s%d:1:%d,%d' % (SLAVE_ID, xdim, ydim))
 
     cur_clip = pyperclip.paste()
-
+    prev_time = time.time()
 
     while True:
         no_msg = True
@@ -112,13 +112,14 @@ def slave():
             try:
                 current_msg = ws.recv()
                 no_msg = False
-
-                # first, do clipboard ops
-                new_clip = pyperclip.paste()
-                if new_clip != cur_clip:
-                    cur_clip = new_clip
-                    clipmsg = "v" + cur_clip
-                    send_non_blocking(ws, clipmsg)
+                if time.time() - prev_time > 1: 
+                    # first, do clipboard ops
+                    new_clip = pyperclip.paste()
+                    if new_clip != cur_clip:
+                        cur_clip = new_clip
+                        clipmsg = "v" + cur_clip
+                        send_non_blocking(ws, clipmsg)
+                    prev_time = time.time()
                 process_message(current_msg)
             except:
                 pass

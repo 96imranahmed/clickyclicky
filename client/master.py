@@ -4,6 +4,7 @@ from websocket import create_connection
 import time
 
 import _thread
+from tkinter import Tk
 
 import ctypes
 from ctypes import windll, wintypes
@@ -24,7 +25,6 @@ from pynput._util.win32 import (
 import pynput.keyboard._win32 as w32
 
 import pyperclip
-
 
 LST = w32.Listener(None, None)
 
@@ -181,7 +181,7 @@ def no_longer_active(xdim, y, new_screen_id):
 
 
 def now_active(xdim, y, old_screen_id):
-    global deadmau5
+    global deadmau5, root
     # MOVE cursor to 10 x-pixels from the right
     # unblock master mouse presses
     if old_screen_id == 1:
@@ -206,7 +206,7 @@ def now_active(xdim, y, old_screen_id):
 
 
 def master():
-    global ws, deadmau5
+    global ws, deadmau5, root
     deadmau5 = False
     # GET SCREEN DIM
     user32 = ctypes.windll.user32
@@ -216,7 +216,8 @@ def master():
 
     active_screen = 0
 
-    cur_clip = pyperclip.paste()
+    prev_time = time.time()
+    cur_clip = None
 
 
     while True:
@@ -231,11 +232,16 @@ def master():
 
         if not deadmau5:
             # first, do clipboard ops
-            new_clip = pyperclip.paste()
-            if new_clip != cur_clip:
-                cur_clip = new_clip
-                clipmsg = "v" + cur_clip
-                send_non_blocking(ws, clipmsg)
+            try:
+                if time.time() - prev_time > 1: 
+                    new_clip = pyperclip.paste()
+                    if new_clip != cur_clip:
+                        cur_clip = new_clip
+                        clipmsg = "v" + cur_clip
+                        send_non_blocking(ws, clipmsg)
+                    prev_time = time.time()
+            except Exception as e:
+                pass
 
             # if within screen, continue
             if  x > 5 and x < xdim - 5:
