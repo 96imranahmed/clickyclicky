@@ -153,21 +153,27 @@ def create_socket(connect_message):
     send_blocking(ws, connect_message)
     return ws
 
-def no_longer_active(x, y):
+def no_longer_active(xdim, y, new_screen_id):
     global deadmau5
     print("no longer active")
     # MOVE the cursor to the new position
-    m_con.position = (10, y)
+    if new_screen_id == 1:
+        m_con.position = (10, y)
+    elif new_screen_id == 2:
+        m_con.position = (xdim-10, y)
 
     # block master mouse presses
     deadmau5 = True
 
 
-def now_active(xdim, y):
+def now_active(xdim, y, old_screen_id):
     global deadmau5
     # MOVE cursor to 10 x-pixels from the right
     # unblock master mouse presses
-    m_con.position = (xdim - 10, y)
+    if old_screen_id == 1:
+        m_con.position = (xdim - 10, y)
+    elif old_screen_id == 2:
+        m_con.position = (10, y)
     
     deadmau5 = False
 
@@ -179,6 +185,8 @@ def master():
     user32.SetProcessDPIAware()
     xdim, ydim = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)
     ws = create_socket('s0:0:%d,%d' % (xdim, ydim))
+
+    active_screen = 0
 
     while True:
         # print("INPUT TIME")
@@ -192,21 +200,37 @@ def master():
 
         if not deadmau5:
             # if within screen, continue
-            if not x > xdim - 5:
+            if  x > 5 and x < xdim - 5:
                 continue
-            # if not, send u message to server
-            else:
+            # if in right screen : screen id 1
+            elif x > xdim - 5:
                 monosodium_glutamate =  'u1:%d,%d' % (10, y)
                 # wait for a response
                 send_blocking(ws, monosodium_glutamate)
 
                 # MOVE the cursor to the new position
                 # block master mouse presses
-                no_longer_active(x,y)
+                no_longer_active(xdim,y,1)
+                active_screen = 1
+            # if in left screen: screen id 2
+            elif x < 5:
+                monosodium_glutamate =  'u2:%d,%d' % (xdim-10, y)
+                # wait for a response
+                send_blocking(ws, monosodium_glutamate)
+
+                # MOVE the cursor to the new position
+                # block master mouse presses
+                no_longer_active(xdim,y,2)
+                active_screen = 2
 
         else:
-            if x < 5: # GG
+            if x < 5 and active_screen == 1: # GG
                 # send logic
+                monosodium_glutamate =  'u0:%d,%d' % (0, 0)
+                # wait for a response
+                send_blocking(ws, monosodium_glutamate)
+                now_active(xdim, y)
+            elif x > xdim - 5 and active_screen == 2:
                 monosodium_glutamate =  'u0:%d,%d' % (0, 0)
                 # wait for a response
                 send_blocking(ws, monosodium_glutamate)
