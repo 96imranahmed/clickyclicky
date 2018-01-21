@@ -75,15 +75,15 @@ def preprocess_keys(msg, data):
         else:
             tup = (msg, data.vkCode)
         key_send = LST._event_to_key(tup[0], tup[1])
-        print(type(key_send), str(key_send))
         if msg == 256:
             pressed = 1
         elif msg == 257:
             pressed = 0
-        if not isinstance(key_send, int):
-            monosodium_glutamate = "i%s:%d" % (str(key_send), pressed)
-        else:
-            monosodium_glutamate = "k%s:%d" % (str(key_send), pressed)
+        x = str(key_send)
+        if "Key" not in x:
+            x = x[1]
+            x = str(chr(ord(x)))
+        monosodium_glutamate = "i%s:%d" % (x, pressed)
         send_non_blocking(ws, monosodium_glutamate)
         kl.suppress_event()
     return True
@@ -147,7 +147,6 @@ def send_blocking(ws, message):
     while dead:
         try:
             tmp = ws.recv()
-            print("not swallowing")
             print(tmp)
             dead = False
         except:
@@ -266,11 +265,7 @@ if __name__ == '__main__':
 
     l.start()
 
-    print("oh boi")
-
     kl.start()
-
-    print("WHOAH boi")
 
     master()
 
