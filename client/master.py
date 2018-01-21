@@ -32,7 +32,6 @@ k_con = keyboard.Controller()
 
 deadmau5 = False
 
-
 WM_LBUTTONDOWN = 0x0201
 WM_LBUTTONUP = 0x0202
 WM_MBUTTONDOWN = 0x0207
@@ -76,7 +75,15 @@ def preprocess_keys(msg, data):
         else:
             tup = (msg, data.vkCode)
         key_send = LST._event_to_key(tup[0], tup[1])
-        # TODO add sending logic
+        if msg == 256:
+            pressed = 1
+        elif msg == 257:
+            pressed = 0
+        if isinstance(key_send, str):
+            monosodium_glutamate = "i%s:%d" % (key_send, pressed)
+        else:
+            monosodium_glutamate = "k%s:%d" % (str(key_send), pressed)
+        send_non_blocking(ws, monosodium_glutamate)
         kl.suppress_event()
     return True
 
@@ -242,7 +249,7 @@ def master():
 
 
 if __name__ == '__main__':
-
+    
     kl = keyboard.Listener(
         on_press=on_press,
         on_release=on_release,
