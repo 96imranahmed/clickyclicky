@@ -6,6 +6,8 @@ from websocket_server import WebsocketServer
 PORT = 9000
 server = WebsocketServer(PORT, '0.0.0.0')
 
+clipboard = None
+
 class Client(object):
     def __init__(self, client_obj, client_type, client_active, client_id, dims, bdry=None):
         self.obj = client_obj
@@ -22,14 +24,26 @@ cur_clients = {}
 
 active_client_id = 0
 
+cur_copyservers = {}
+
 def start_server():
     server.set_fn_new_client(new_client)
     server.set_fn_client_left(client_left)
     server.set_fn_message_received(message_received)
     server.run_forever()
 
+
+def create_copyserver_socket(connect_message, address):
+    # ws = create_connection("ws://35.178.5.103:9000")
+    ws = create_connection("ws://" + address)
+
+    ws.settimeout(0.05)
+    send_blocking(ws, connect_message)
+    return ws
+
+
 def message_received(client, server, message):
-    global cur_clients, active_client_id
+    global cur_clients, active_client_id, cur_copyservers, clipboard
 
     if len(message) == 0: return
 
@@ -50,6 +64,7 @@ def message_received(client, server, message):
             dims = [int(i) for i in msg_lst[2].split(',')]
             c_cur = Client(client, 'master', True, int(msg_lst[0]), dims)
 
+
         else:
             print("Got slave connected")
             dims = [int(i) for i in msg_lst[2].split(',')]
@@ -58,6 +73,7 @@ def message_received(client, server, message):
         cur_clients[int(msg_lst[0])] = c_cur
 
         server.send_message(client, "k")
+
 
     elif message_type == 'u':
         msg_lst = msg.split(':')
@@ -70,6 +86,13 @@ def message_received(client, server, message):
             cur_clients[active_client_id].client_active = True
             if not active_client_id == 0:
                 server.send_message(cur_clients[active_client_id].obj, 'm' + msg)
+
+
+            # send the clipboard content to the active client
+            rel_copyserver_ws = cur_copyservers[active_client_id]
+            rel_copyserver_ws.send("pyperclip:" + str(clipboard))
+
+
         print("CONTEXT SWITCH TO %d" % active_client_id)
 
         # send message to master
@@ -80,6 +103,30 @@ def message_received(client, server, message):
             or message_type == 'k':
         if active_client_id in cur_clients:
             server.send_message(cur_clients[active_client_id].obj, message_type + msg)
+
+
+    elif message_type = 'x':
+
+        copyserver_id = int(msg[0])
+        # now initiate a connection with the client's copyserver
+        if copyserver_id == 0:
+            client_copyserver_addr = "0.0.0.0:9001"
+        elif copyserver_id == 1:
+            client_copyserver_addr = "0.0.0.0:9002"
+        elif copyserver_id == 2:
+            client_copyserver_addr = "0.0.0.0:9003"
+
+        connect_message = "hello"
+
+        ws_copyserver = create_copyserver_socket(connect_message, client_copyserver_addr)
+
+        cur_copyservers[copyserver_id] = ws_copyserver
+
+    elif message_type == "v":
+        clipboard = msg
+
+
+
 
 def send_state_to_clients():
     pass

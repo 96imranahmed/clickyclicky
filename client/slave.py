@@ -5,6 +5,7 @@ from pynput import mouse, keyboard
 from pynput.mouse import Button, Controller
 import time
 import ctypes
+import pyperclip
 
 SLAVE_ID = 1
 
@@ -12,6 +13,39 @@ ws = None
 m_con = mouse.Controller()
 k_con = keyboard.Controller()
 BUTTON_LIST = [Button.left, Button.middle, Button.right]
+
+
+PORT = 9002
+copyserver = WebsocketServer(PORT, '0.0.0.0')
+copyserver_remote_object = None
+
+def client_left(client, copyserver):
+    pass
+
+def new_client(client, copyserver):
+    pass
+
+def proc_copyserver_msg(client, copyserver, msg):
+    global copyserver_remote_object
+
+    if len(msg) == 0: 
+        return
+
+    if msg == 'hello':
+        copyserver_remote_object = client
+        copyserver.send_message(client, "k")
+
+    elif msg.split(':')[0] == 'pyperclip':
+        pyperclip.copy(msg.split(':')[1])
+
+
+def start_copyserver():
+    copyserver.set_fn_new_client(new_client)
+    copyserver.set_fn_client_left(client_left)
+    copyserver.set_fn_message_received(proc_copyserver_msg)
+    copyserver.run_forever()
+
+
 
 def process_message(msg):
     global m_con, k_con
@@ -72,13 +106,27 @@ def slave():
     xdim, ydim = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)
     ws = create_socket('s%d:1:%d,%d' % (SLAVE_ID, xdim, ydim))
 
+    # start the copyserver here and tell the other server to talk to us
+    _thread.start_new_thread( start_copyserver, ())
+    send_blocking(ws, "x%d" % SLAVE_ID)
+
+    cur_clip = pyperclip.paste()
+
+
     while True:
         no_msg = True
         while no_msg:
             try:
                 current_msg = ws.recv()
                 no_msg = False
-                process_message(current_msg)
+
+                # first, do clipboard ops
+                new_clip = pyperclip.paste()
+                if new_clip != cur_clip:
+                    cur_clip = new_clip
+                    clipmsg = "v" + cur_clip
+                    send_non_blocking(ws, clipmsg)
+                    process_message(current_msg)
             except:
                 pass
     
