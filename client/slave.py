@@ -6,6 +6,8 @@ from pynput.mouse import Button, Controller
 import time
 import ctypes
 
+SLAVE_ID = 1
+
 ws = None
 m_con = mouse.Controller()
 k_con = keyboard.Controller()
@@ -68,7 +70,7 @@ def slave():
     user32 = ctypes.windll.user32
     user32.SetProcessDPIAware()
     xdim, ydim = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)
-    ws = create_socket('s1:1:%d,%d' % (xdim, ydim))
+    ws = create_socket('s%d:1:%d,%d' % (SLAVE_ID, xdim, ydim))
 
     while True:
         no_msg = True
