@@ -14,6 +14,7 @@ m_con = mouse.Controller()
 k_con = keyboard.Controller()
 BUTTON_LIST = [Button.left, Button.middle, Button.right]
 
+<<<<<<< HEAD
 
 PORT = 9002
 copyserver = WebsocketServer(PORT, '0.0.0.0')
@@ -46,9 +47,10 @@ def start_copyserver():
     copyserver.run_forever()
 
 
+rosetta = {}
 
 def process_message(msg):
-    global m_con, k_con
+    global m_con, k_con, rosetta
     msg_type = msg[0]
     msg = msg[1:]
     if msg_type == 'm':
@@ -63,7 +65,6 @@ def process_message(msg):
         coords = [int(i) for i in cmd_split[2].split(',')]
         m_con.position = coords
         if is_press:
-            print("clicky clicky")
             m_con.press(c_btn)
         else:
             m_con.release(c_btn)
@@ -72,7 +73,21 @@ def process_message(msg):
         dx, dy = [int(i) for i in msg.split(':')]
         m_con.scroll(dx, dy)
     elif msg_type == 'i':
-        return NotImplementedError
+        cmd_split = msg.split(":")
+        ch = cmd_split[0]
+        is_press = bool(int(cmd_split[1]))
+        if is_press:
+            k_con.press(ch)
+        else:
+            k_con.release(ch)
+    elif msg_type == 'k':
+        cmd_split = msg.split(":")
+        ke = rosetta[cmd_split[0]]
+        is_press = bool(int(cmd_split[1]))
+        if is_press:
+            k_con.press(ke)
+        else:
+            k_con.release(ke)
 
 
 def send_non_blocking(ws, message):
@@ -132,4 +147,6 @@ def slave():
     
 
 if __name__ == '__main__':
+    for key in keyboard.Key:
+        rosetta[str(key)] = key
     slave()
