@@ -68,7 +68,8 @@ def message_received(client, server, message):
 
         if active_client_id in cur_clients:
             cur_clients[active_client_id].client_active = True
-            server.send_message(cur_clients[active_client_id].obj, 'm' + msg)
+            if not active_client_id == 0:
+                server.send_message(cur_clients[active_client_id].obj, 'm' + msg)
         print("CONTEXT SWITCH TO %d" % active_client_id)
 
         # send message to master
