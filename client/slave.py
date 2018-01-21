@@ -66,6 +66,7 @@ def slave():
     global ws
     # GET SCREEN DIM
     user32 = ctypes.windll.user32
+    user32.SetProcessDPIAware()
     xdim, ydim = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)
     ws = create_socket('s1:1:%d,%d' % (xdim, ydim))
 

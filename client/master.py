@@ -176,6 +176,7 @@ def master():
     deadmau5 = False
     # GET SCREEN DIM
     user32 = ctypes.windll.user32
+    user32.SetProcessDPIAware()
     xdim, ydim = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)
     ws = create_socket('s0:0:%d,%d' % (xdim, ydim))
 
