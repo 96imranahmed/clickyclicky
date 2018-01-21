@@ -7,6 +7,8 @@ import time
 import ctypes
 import pyperclip
 
+import _thread
+
 from websocket_server import WebsocketServer
 
 SLAVE_ID = 1
@@ -50,7 +52,7 @@ def start_copyserver():
 
 rosetta = {}
 
-PORT = 9002
+PORT = 9000 + 1 + SLAVE_ID
 copyserver = WebsocketServer(PORT, '0.0.0.0')
 copyserver_remote_object = None
 

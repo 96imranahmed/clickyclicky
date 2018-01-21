@@ -3,6 +3,8 @@ from __future__ import print_function
 
 from websocket_server import WebsocketServer
 
+from websocket import create_connection
+
 PORT = 9000
 server = WebsocketServer(PORT, '0.0.0.0')
 
