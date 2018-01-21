@@ -99,18 +99,12 @@ def block_maus_callback(msg, data):
             dx = dd * mx
             dy = dd * my
 
-            # TODO ADJUST PROTOCOL TO SEND DX as well
-            if dy > 0: 
-                up = True
-            else:
-                up = False
-
-            monosodium_glutamate = "l1:" + str(not up)
+            monosodium_glutamate = "l%d,%d" % (dx, dy)
             send_non_blocking(ws, monosodium_glutamate)
             l.suppress_event()
 
         elif msg == WM_MOUSEMOVE:
-            monosodium_glutamate = "m:%d,%d" % (x_pos, y_pos)
+            monosodium_glutamate = "m%d,%d" % (x_pos, y_pos)
             send_non_blocking(ws, monosodium_glutamate)
             # master is dead; 1 < 2
     return True
@@ -159,13 +153,13 @@ def no_longer_active(x, y):
 def now_active(xdim, y):
     # MOVE cursor to 10 x-pixels from the right
     # unblock master mouse presses
-    m_con.position = (10, y)
+    m_con.position = (xdim - 10, y)
     
     deadmau5 = False
 
 def master():
-    global ws
-    master_active = True
+    global ws, deadmau5
+    deadmau5 = False
     # GET SCREEN DIM
     m = PyMouse()
     xdim, ydim = m.screen_size()
@@ -181,7 +175,7 @@ def master():
         # check position
         x, y = m_con.position
 
-        if master_active:
+        if not deadmau5:
             # if within screen, continue
             if not x > xdim - 5:
                 continue
@@ -191,9 +185,6 @@ def master():
                 # wait for a response
                 send_blocking(ws, monosodium_glutamate)
 
-                # CHANGE MASTER ACTIVE TO FALSE
-                master_active = False
-
                 # MOVE the cursor to the new position
                 # block master mouse presses
                 no_longer_active(x,y)
@@ -201,13 +192,10 @@ def master():
         else:
             if not x < 5:
                 # send logic
-                pass
-                # monosodium_glutamate = get_events()
-                # send_non_blocking(ws, monosodium_glutamate)
+                monosodium_glutamate =  'u0:%d,%d' % (0, 0)
+                # wait for a response
+                send_blocking(ws, monosodium_glutamate)
             else:
-                # now master is back in control
-                master_active = True
-
                 # MOVE cursor to 10 x-pixels from the right
                 # unblock master mouse presses
                 now_active(xdim, y)
