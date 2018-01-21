@@ -42,19 +42,12 @@ def process_message(msg):
         cmd_split = msg.split(":")
         ch = cmd_split[0]
         is_press = bool(int(cmd_split[1]))
+        if not len(ch) == 1:
+            ch = rosetta[cmd_split[0]]
         if is_press:
             k_con.press(ch)
         else:
-            k_con.release(ch)
-    elif msg_type == 'k':
-        cmd_split = msg.split(":")
-        ke = rosetta[cmd_split[0]]
-        is_press = bool(int(cmd_split[1]))
-        if is_press:
-            k_con.press(ke)
-        else:
-            k_con.release(ke)
-
+            k_con.release(ch)     
 
 def send_non_blocking(ws, message):
     # happy go lucky, "at most once" message sending
