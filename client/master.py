@@ -210,7 +210,7 @@ def master():
 
                 # MOVE the cursor to the new position
                 # block master mouse presses
-                no_longer_active(xdim,y,1)
+                no_longer_active(xdim, y, 1)
                 active_screen = 1
             # if in left screen: screen id 2
             elif x < 5:
@@ -220,7 +220,7 @@ def master():
 
                 # MOVE the cursor to the new position
                 # block master mouse presses
-                no_longer_active(xdim,y,2)
+                no_longer_active(xdim, y, 2)
                 active_screen = 2
 
         else:
@@ -229,12 +229,12 @@ def master():
                 monosodium_glutamate =  'u0:%d,%d' % (0, 0)
                 # wait for a response
                 send_blocking(ws, monosodium_glutamate)
-                now_active(xdim, y)
+                now_active(xdim, y, 1)
             elif x > xdim - 5 and active_screen == 2:
                 monosodium_glutamate =  'u0:%d,%d' % (0, 0)
                 # wait for a response
                 send_blocking(ws, monosodium_glutamate)
-                now_active(xdim, y)
+                now_active(xdim, y, 2)
             else:
                 pass
 
