@@ -20,6 +20,7 @@ from pynput._util.win32 import (
     SendInput,
     SystemHook)
 
+l = None
 ws = None
 
 m_con = mouse.Controller()
@@ -44,22 +45,13 @@ SCROLL_BUTTONS = {
     WM_MOUSEHWHEEL: (1, 0)}
 
 
-class Button(enum.Enum):
-    """The various buttons.
-    """
-    unknown = None
-    left = (MOUSEINPUT.LEFTUP, MOUSEINPUT.LEFTDOWN)
-    middle = (MOUSEINPUT.MIDDLEUP, MOUSEINPUT.MIDDLEDOWN)
-    right = (MOUSEINPUT.RIGHTUP, MOUSEINPUT.RIGHTDOWN)
-
-
 CLICK_BUTTONS = {
-    WM_LBUTTONDOWN: (Button.left, True),
-    WM_LBUTTONUP: (Button.left, False),
-    WM_MBUTTONDOWN: (Button.middle, True),
-    WM_MBUTTONUP: (Button.middle, False),
-    WM_RBUTTONDOWN: (Button.right, True),
-    WM_RBUTTONUP: (Button.right, False)}
+    WM_LBUTTONDOWN: (0, True),
+    WM_LBUTTONUP: (0, False),
+    WM_MBUTTONDOWN: (1, True),
+    WM_MBUTTONUP: (1, False),
+    WM_RBUTTONDOWN: (2, True),
+    WM_RBUTTONUP: (2, False)}
 
 def on_move(x, y):
     # print('Pointer moved to {0}'.format(
@@ -88,8 +80,7 @@ def block_maus_callback(msg, data):
 
         if msg in CLICK_BUTTONS:
             button, pressed = CLICK_BUTTONS[msg]
-            flag = not pressed
-            monosodium_glutamate = "i1:" + str(pressed)
+            monosodium_glutamate = "c%d:%d:%d,%d" % (button, pressed, x_pos, y_pos)
             send_non_blocking(ws, monosodium_glutamate)
             l.suppress_event()
             
@@ -109,14 +100,6 @@ def block_maus_callback(msg, data):
             # master is dead; 1 < 2
     return True
 
-
-l = mouse.Listener(
-        on_move=on_move,
-        on_click=on_click,
-        on_scroll=on_scroll,
-        win32_event_filter = block_maus_callback)
-
-
 def send_non_blocking(ws, message):
     # happy go lucky, "at most once" message sending
     ws.send(message)
@@ -135,14 +118,15 @@ def send_blocking(ws, message):
             pass
 
 def create_socket(connect_message):
-    ws = create_connection("ws://35.178.5.103:9000")
-    # ws = create_connection("ws://127.0.0.1:9000")
+    # ws = create_connection("ws://35.178.5.103:9000")
+    ws = create_connection("ws://127.0.0.1:9000")
     ws.settimeout(0.05)
     send_blocking(ws, connect_message)
     return ws
 
 def no_longer_active(x, y):
     global deadmau5
+    print("no longer active")
     # MOVE the cursor to the new position
     m_con.position = (10, y)
 
@@ -151,6 +135,7 @@ def no_longer_active(x, y):
 
 
 def now_active(xdim, y):
+    global deadmau5
     # MOVE cursor to 10 x-pixels from the right
     # unblock master mouse presses
     m_con.position = (xdim - 10, y)
@@ -190,20 +175,28 @@ def master():
                 no_longer_active(x,y)
 
         else:
-            if not x < 5:
+            if x < 5: # GG
                 # send logic
                 monosodium_glutamate =  'u0:%d,%d' % (0, 0)
                 # wait for a response
                 send_blocking(ws, monosodium_glutamate)
-            else:
-                # MOVE cursor to 10 x-pixels from the right
-                # unblock master mouse presses
                 now_active(xdim, y)
+            else:
+                pass
+
 
 
 
 if __name__ == '__main__':
-    global l
+
+    l = mouse.Listener(
+        on_move=on_move,
+        on_click=on_click,
+        on_scroll=on_scroll,
+        win32_event_filter = block_maus_callback)
+
     l.start()
-    l.join()
+    print("oh boi")
+    print("WHOAH boi")
     master()
+    l.join()
