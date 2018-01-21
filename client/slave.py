@@ -4,6 +4,7 @@ from websocket import create_connection
 from pynput import mouse, keyboard
 from pynput.mouse import Button, Controller
 import time
+import ctypes
 
 ws = None
 m_con = mouse.Controller()
@@ -21,19 +22,20 @@ def process_message(msg):
     elif msg_type == 'c':
         # Process button
         cmd_split = msg.split(':')
-        c_btn = BUTTON_LIST[int(cmd_split)]
-        is_press == bool(int(cmd_split[1]))
+        c_btn = BUTTON_LIST[int(cmd_split[0])]
+        is_press = bool(int(cmd_split[1]))
         coords = [int(i) for i in cmd_split[2].split(',')]
         m_con.position = coords
         if is_press:
+            print("clicky clicky")
             m_con.press(c_btn)
         else:
             m_con.release(c_btn)
     elif msg_type == 'l':
         # Process scroll
-        scroll_split = [int(i) for i in msg.split(':')]
+        dx, dy = [int(i) for i in msg.split(':')]
         m_con.scroll(dx, dy)
-    elif msg_type == 'k':
+    elif msg_type == 'i':
         return NotImplementedError
 
 
@@ -53,8 +55,8 @@ def send_blocking(ws, message):
             pass
 
 def create_socket(connect_message):
-    # ws = create_connection("ws://35.178.5.103:9000")
-    ws = create_connection("ws://127.0.0.1:9000")
+    ws = create_connection("ws://35.178.5.103:9000")
+    # ws = create_connection("ws://127.0.0.1:9000")
     ws.settimeout(0.05)
     send_blocking(ws, connect_message)
     return ws
@@ -73,7 +75,7 @@ def slave():
             try:
                 current_msg = ws.recv()
                 no_msg = False
-                process_message(no_msg)
+                process_message(current_msg)
             except:
                 pass
     

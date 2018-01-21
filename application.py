@@ -85,7 +85,7 @@ def message_received(client, server, message):
     elif message_type == 'l':
         if active_client_id in cur_clients:
             server.send_message(cur_clients[active_client_id].obj, message_type + msg)
-        dxdy = [int(i) for i in msg.split(',')]        
+        dxdy = [int(i) for i in msg.split(':')]        
         print("scroll boi for active client (%d, %d)" % (dxdy[0], dxdy[1]))
 
     elif message_type == 'c':
