@@ -2,11 +2,40 @@ from __future__ import division
 from __future__ import print_function
 from websocket import create_connection
 from pymouse import PyMouse
+from pynput import mouse, keyboard
+from pynput.mouse import Button, Controller
 import time
 
 ws = None
 m_con = mouse.Controller()
 k_con = keyboard.Controller()
+BUTTON_LIST = [Button.left, Button.middle, Button.right]
+
+def process_message(msg):
+    global m_con, k_con
+    msg_type = msg[0]
+    msg = msg[1:]
+    if msg_type == 'm':
+        # Process coordinates
+        coords = [int(i) for i in msg.split(',')]
+        m_con.position = coords
+    elif msg_type == 'c':
+        # Process button
+        cmd_split = msg.split(':')
+        c_btn = BUTTON_LIST[int(cmd_split)]
+        is_press == bool(int(cmd_split[1]))
+        coords = [int(i) for i in cmd_split[2].split(',')]
+        m_con.position = coords
+        if is_press:
+            m_con.press(c_btn)
+        else:
+            m_con.release(c_btn)
+    elif msg_type == 'l':
+        # Process scroll
+        scroll_split = [int(i) for i in msg.split(':')]
+        m_con.scroll(dx, dy)
+    elif msg_type == 'k':
+        return NotImplementedError
 
 
 def send_non_blocking(ws, message):
@@ -20,8 +49,6 @@ def send_blocking(ws, message):
     while dead:
         try:
             tmp = ws.recv()
-            print("not swallowing")
-            print(tmp)
             dead = False
         except:
             pass
@@ -42,9 +69,15 @@ def slave():
     ws = create_socket('s1:1:%d,%d' % (xdim, ydim))
 
     while True:
-        print("INPUT TIME")
-        a = input()
-        send_non_blocking(ws,a)
+        no_msg = True
+        while no_msg:
+            try:
+                current_msg = ws.recv()
+                no_msg = False
+                process_message(no_msg)
+            except:
+                pass
+    
 
 if __name__ == '__main__':
     slave()
