@@ -33,7 +33,7 @@ def start_server():
 
 
 def message_received(client, server, message):
-    global cur_clients, active_client_id, clipboard
+    global cur_clients, active_client_id, clipboard, clipboard_change
 
     if len(message) == 0: return
 
@@ -114,7 +114,7 @@ def send_state_to_clients():
 def client_left(client, server):
     global cur_clients, active_client_id
     for k,v in cur_clients.items():
-        if v.client_obj == client:
+        if v.obj == client:
             del cur_clients[k]
             if active_client_id == k:
                 active_client_id = 0
