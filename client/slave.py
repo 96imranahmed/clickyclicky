@@ -14,7 +14,6 @@ m_con = mouse.Controller()
 k_con = keyboard.Controller()
 BUTTON_LIST = [Button.left, Button.middle, Button.right]
 
-<<<<<<< HEAD
 
 PORT = 9002
 copyserver = WebsocketServer(PORT, '0.0.0.0')
