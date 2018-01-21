@@ -76,28 +76,10 @@ def message_received(client, server, message):
         server.send_message(cur_clients[0].obj, '<3')
 
 
-    elif message_type == 'm':
+    elif message_type == 'm' or message_type == 'l' or message_type == 'c' or message_type == 'i' \
+            or message_type == 'k':
         if active_client_id in cur_clients:
             server.send_message(cur_clients[active_client_id].obj, message_type + msg)
-        coords = [int(i) for i in msg.split(',')]   
-        print("new coords for active client (%d, %d)" % (coords[0], coords[1]))
-
-    elif message_type == 'l':
-        if active_client_id in cur_clients:
-            server.send_message(cur_clients[active_client_id].obj, message_type + msg)
-        dxdy = [int(i) for i in msg.split(':')]        
-        print("scroll boi for active client (%d, %d)" % (dxdy[0], dxdy[1]))
-
-    elif message_type == 'c':
-        if active_client_id in cur_clients:
-            server.send_message(cur_clients[active_client_id].obj, message_type + msg)
-        print("SENDING KEY AND WHAT KEY")
-
-    elif message_type == 'i':
-        # Most likely going to be a queue of keys (should be able to handle multiple)
-        if active_client_id in cur_clients:
-            server.send_message(cur_clients[active_client_id].obj, message_type + msg)  
-        print("SENDING KEY AND WHAT KEY")
 
 def send_state_to_clients():
     pass
