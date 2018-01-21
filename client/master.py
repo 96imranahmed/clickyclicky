@@ -25,6 +25,8 @@ import pynput.keyboard._win32 as w32
 
 import pyperclip
 
+from websocket_server import WebsocketServer
+
 LST = w32.Listener(None, None)
 
 kl = None

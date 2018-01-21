@@ -105,7 +105,7 @@ def message_received(client, server, message):
             server.send_message(cur_clients[active_client_id].obj, message_type + msg)
 
 
-    elif message_type = 'x':
+    elif message_type == 'x':
 
         copyserver_id = int(msg[0])
         # now initiate a connection with the client's copyserver

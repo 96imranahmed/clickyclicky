@@ -7,6 +7,8 @@ import time
 import ctypes
 import pyperclip
 
+from websocket_server import WebsocketServer
+
 SLAVE_ID = 1
 
 ws = None
