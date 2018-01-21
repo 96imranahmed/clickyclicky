@@ -92,20 +92,15 @@ def message_received(client, server, message):
 
 
     elif message_type == "v":
-        if clipboard != msg:
-            clipboard_change = True
-            clipboard = msg
-        if clipboard_change:
-            for client_id in cur_clients:
-                if client_id == 0: pass
-                server.send_message(cur_clients[client_id].obj, "n")
-        clipboard_change = False
-
-    elif message_type == 'z':
-        if active_client_id in cur_clients:
-            server.send_message(cur_clients[active_client_id].obj, clipboard)
-
-
+        if msg == "":
+            server.send_message(cur_clients[0].obj, "n" + clipboard)
+        else:
+            if clipboard != msg:
+                clipboard = msg
+                for client_id in cur_clients:
+                    if client_id == 0:
+                        continue
+                    server.send_message(cur_clients[client_id].obj, "n" + clipboard)
 
 
 def send_state_to_clients():

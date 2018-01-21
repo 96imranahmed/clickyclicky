@@ -59,7 +59,9 @@ def process_message(msg):
             k_con.release(ch)  
     elif msg_type == "n":
         # received a clipboard update
-        recv_clipboard(ws)   
+        new_clip = pyperclip.paste()
+        if new_clip != msg:
+            pyperclip.copy(msg)  
 
 def send_non_blocking(ws, message):
     # happy go lucky, "at most once" message sending
@@ -82,17 +84,6 @@ def create_socket(connect_message):
     ws.settimeout(0.05)
     send_blocking(ws, connect_message)
     return ws
-
-def recv_clipboard(ws):
-    ws.send("z")
-    dead = True
-    while dead:
-        try:
-            tmp = ws.recv()
-            dead = False
-        except:
-            pass
-    pyperclip.copy(tmp)
 
 
 def slave():

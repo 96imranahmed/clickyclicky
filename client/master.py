@@ -188,21 +188,21 @@ def now_active(xdim, y, old_screen_id):
         m_con.position = (xdim - 10, y)
     elif old_screen_id == 2:
         m_con.position = (10, y)
-    
     deadmau5 = False
-
-    def recv_clipboard(ws):
-        ws.send("z")
-        dead = True
-        while dead:
-            try:
-                tmp = ws.recv()
-                dead = False
-            except:
-                pass
-        pyperclip.copy(tmp)
-
     recv_clipboard(ws)
+
+def recv_clipboard(ws):
+    ws.send("v")
+    dead = True
+    while dead:
+        try:
+            tmp = ws.recv()
+            if tmp[0] == "n":
+                tmp = tmp[1:]
+            dead = False
+        except:
+            pass
+    pyperclip.copy(tmp)
 
 
 def master():
