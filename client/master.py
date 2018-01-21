@@ -25,7 +25,6 @@ import pynput.keyboard._win32 as w32
 
 import pyperclip
 
-from websocket_server import WebsocketServer
 
 LST = w32.Listener(None, None)
 
@@ -63,9 +62,6 @@ CLICK_BUTTONS = {
     WM_RBUTTONUP: (2, False)}
 
 
-PORT = 9001
-copyserver = WebsocketServer(PORT, '172.20.3.192')
-copyserver_remote_object = None
 
 
 def on_press(key):
@@ -162,32 +158,6 @@ def send_blocking(ws, message):
             pass
 
 
-def client_left(client, copyserver):
-    pass
-
-def new_client(client, copyserver):
-    pass
-
-def proc_copyserver_msg(client, copyserver, msg):
-    global copyserver_remote_object
-
-    if len(msg) == 0: 
-        return
-
-    if msg == 'hello':
-        copyserver_remote_object = client
-        copyserver.send_message(client, "k")
-
-    elif msg.split(':')[0] == 'pyperclip':
-        pyperclip.copy(msg.split(':')[1])
-
-
-def start_copyserver():
-    copyserver.set_fn_new_client(new_client)
-    copyserver.set_fn_client_left(client_left)
-    copyserver.set_fn_message_received(proc_copyserver_msg)
-    copyserver.run_forever()
-
 
 def create_socket(connect_message):
     ws = create_connection("ws://35.178.5.103:9000")
@@ -221,6 +191,20 @@ def now_active(xdim, y, old_screen_id):
     
     deadmau5 = False
 
+    def recv_clipboard(ws):
+        ws.send("z")
+        dead = True
+        while dead:
+            try:
+                tmp = ws.recv()
+                dead = False
+            except:
+                pass
+        pyperclip.copy(tmp)
+
+    recv_clipboard(ws)
+
+
 def master():
     global ws, deadmau5
     deadmau5 = False
@@ -231,10 +215,6 @@ def master():
     ws = create_socket('s0:0:%d,%d' % (xdim, ydim))
 
     active_screen = 0
-
-    # start the copyserver here and tell the other server to talk to us
-    _thread.start_new_thread( start_copyserver, ())
-    send_blocking(ws, "x0")
 
     cur_clip = pyperclip.paste()
 

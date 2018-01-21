@@ -1,14 +1,12 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 
-from websocket_server import WebsocketServer
-
-from websocket import create_connection
-
 PORT = 9000
 server = WebsocketServer(PORT, '0.0.0.0')
 
 clipboard = None
+
+clipboard_change = False
 
 class Client(object):
     def __init__(self, client_obj, client_type, client_active, client_id, dims, bdry=None):
@@ -26,27 +24,10 @@ cur_clients = {}
 
 active_client_id = 0
 
-cur_copyservers = {}
-
-def start_server():
-    server.set_fn_new_client(new_client)
-    server.set_fn_client_left(client_left)
-    server.set_fn_message_received(message_received)
-    server.run_forever()
-
-
-def create_copyserver_socket(connect_message, address):
-    # ws = create_connection("ws://35.178.5.103:9000")
-    print("got to create copyserver socket")
-    ws = create_connection("ws://" + address)
-
-    ws.settimeout(0.05)
-    send_blocking(ws, connect_message)
-    return ws
 
 
 def message_received(client, server, message):
-    global cur_clients, active_client_id, cur_copyservers, clipboard
+    global cur_clients, active_client_id, clipboard
 
     if len(message) == 0: return
 
@@ -91,10 +72,6 @@ def message_received(client, server, message):
                 server.send_message(cur_clients[active_client_id].obj, 'm' + msg)
 
 
-            # send the clipboard content to the active client
-            rel_copyserver_ws = cur_copyservers[active_client_id]
-            rel_copyserver_ws.send("pyperclip:" + str(clipboard))
-
 
         print("CONTEXT SWITCH TO %d" % active_client_id)
 
@@ -108,25 +85,19 @@ def message_received(client, server, message):
             server.send_message(cur_clients[active_client_id].obj, message_type + msg)
 
 
-    elif message_type == 'x':
-
-        copyserver_id = int(msg[0])
-        # now initiate a connection with the client's copyserver
-        if copyserver_id == 0:
-            client_copyserver_addr = "172.20.3.192:9001"
-        elif copyserver_id == 1:
-            client_copyserver_addr = "172.20.1.67:9002"
-        elif copyserver_id == 2:
-            client_copyserver_addr = "172.20.3.211:9003"
-
-        connect_message = "hello"
-
-        ws_copyserver = create_copyserver_socket(connect_message, client_copyserver_addr)
-
-        cur_copyservers[copyserver_id] = ws_copyserver
-
     elif message_type == "v":
-        clipboard = msg
+        if clipboard != msg:
+            clipboard_change = True
+            clipboard = msg
+        if clipboard_change:
+            for client_id in cur_clients:
+                if client_id == 0: pass
+                server.send_message(cur_clients[client_id].obj, "n")
+        clipboard_change = False
+
+    elif message_type == 'z':
+        if active_client_id in cur_clients:
+            server.send_message(cur_clients[active_client_id].obj, clipboard)
 
 
 

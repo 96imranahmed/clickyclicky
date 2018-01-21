@@ -19,71 +19,9 @@ k_con = keyboard.Controller()
 BUTTON_LIST = [Button.left, Button.middle, Button.right]
 
 
-PORT = 9002
-if SLAVE_ID == 1:
-    copyserver = WebsocketServer(PORT, '172.20.1.67')
-else:
-    copyserver = WebsocketServer(PORT, '172.20.3.211')
-copyserver_remote_object = None
-
-def client_left(client, copyserver):
-    pass
-
-def new_client(client, copyserver):
-    pass
-
-def proc_copyserver_msg(client, copyserver, msg):
-    global copyserver_remote_object
-
-    if len(msg) == 0: 
-        return
-
-    if msg == 'hello':
-        copyserver_remote_object = client
-        copyserver.send_message(client, "k")
-
-    elif msg.split(':')[0] == 'pyperclip':
-        pyperclip.copy(msg.split(':')[1])
-
-
-def start_copyserver():
-    copyserver.set_fn_new_client(new_client)
-    copyserver.set_fn_client_left(client_left)
-    copyserver.set_fn_message_received(proc_copyserver_msg)
-    copyserver.run_forever()
-
 
 rosetta = {}
 
-PORT = 9000 + 1 + SLAVE_ID
-copyserver = WebsocketServer(PORT, '0.0.0.0')
-copyserver_remote_object = None
-
-def client_left(client, copyserver):
-    pass
-
-def new_client(client, copyserver):
-    pass
-
-def proc_copyserver_msg(client, copyserver, msg):
-    global copyserver_remote_object
-
-    if len(msg) == 0: 
-        return
-
-    if msg == 'hello':
-        copyserver_remote_object = client
-        copyserver.send_message(client, "k")
-
-    elif msg.split(':')[0] == 'pyperclip':
-        pyperclip.copy(msg.split(':')[1])
-
-
-def start_copyserver():
-    copyserver.set_fn_new_client(new_client)
-    copyserver.set_fn_client_left(client_left)
-    copyserver.set_fn_message_received(proc_copyserver_msg)
-    copyserver.run_forever()
 
 
 def process_message(msg):
@@ -118,7 +56,10 @@ def process_message(msg):
         if is_press:
             k_con.press(ch)
         else:
-            k_con.release(ch)     
+            k_con.release(ch)  
+    elif msg_type == "n":
+        # received a clipboard update
+        recv_clipboard(ws)   
 
 def send_non_blocking(ws, message):
     # happy go lucky, "at most once" message sending
@@ -142,6 +83,17 @@ def create_socket(connect_message):
     send_blocking(ws, connect_message)
     return ws
 
+def recv_clipboard(ws):
+    ws.send("z")
+    dead = True
+    while dead:
+        try:
+            tmp = ws.recv()
+            dead = False
+        except:
+            pass
+    pyperclip.copy(tmp)
+
 
 def slave():
     global ws
@@ -150,10 +102,6 @@ def slave():
     user32.SetProcessDPIAware()
     xdim, ydim = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)
     ws = create_socket('s%d:1:%d,%d' % (SLAVE_ID, xdim, ydim))
-
-    # start the copyserver here and tell the other server to talk to us
-    _thread.start_new_thread( start_copyserver, ())
-    send_blocking(ws, "x%d" % SLAVE_ID)
 
     cur_clip = pyperclip.paste()
 
@@ -171,7 +119,7 @@ def slave():
                     cur_clip = new_clip
                     clipmsg = "v" + cur_clip
                     send_non_blocking(ws, clipmsg)
-                    process_message(current_msg)
+                process_message(current_msg)
             except:
                 pass
     
